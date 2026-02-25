@@ -1,0 +1,24 @@
+# export functions to the local environment
+useDynLib(ACFmetal, .registration = TRUE)
+
+# imports
+importFrom("stats",
+           "median",
+           "runif")
+importFrom("utils",
+           "setTxtProgressBar",
+           "txtProgressBar",
+           "data")
+importFrom("methods",
+           "is")
+
+# Basic device info
+export(metal_is_available)
+export(metal_get_all_devices)
+export(metal_devices_default)
+export(metal_device_information)
+export(metal_functions_to_library)
+export(metal_functions_from_library)
+export(metal_make_context)
+export(simple_metal_wrapper)
+

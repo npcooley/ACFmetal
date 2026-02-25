@@ -1,0 +1,39 @@
+# Makevars for ACFmetal
+
+# Note: -fobjc-arc is macOS-specific and triggers R CMD check warning,
+# but it's required for Objective-C ARC (Automatic Reference Counting).
+# Applied only to .m files below, not to PKG_CFLAGS.
+PKG_LIBS = -framework Metal -framework Foundation
+
+# C preprocessor PKG_CPPFLAGS
+# -I for subdirs in src
+PKG_CPPFLAGS = -I.
+
+# C source files
+# alphabetical order please, src directory first then subdirs if ever added
+# lower-case first followed by upper case
+SOURCES_C = buffers.c \
+	command.c \
+	devices.c \
+	libraries_functions_pipelines.c \
+	runners.c \
+	utils.c \
+	R_init_ACFmetal.c
+
+# Objective-C source files
+SOURCES_M = buffers.m \
+	command.m \
+	devices.m \
+	libraries_functions_pipelines.m \
+	utils.m
+
+OBJECTS = $(SOURCES_C:.c=.o) $(SOURCES_M:.m=_m.o)
+
+# Compile Objective-C files
+%_m.o: %.m
+	$(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -fobjc-arc -c $< -o $@
+
+# define a clean function, otherwise .o files in directories won't be cleaned
+# clean:
+# 	rm -f $(OBJECTS) && rm -rf *.mod
+# 	@echo "intermediate compilation objects removed..."
