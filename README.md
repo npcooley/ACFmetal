@@ -1,7 +1,7 @@
-ACFmetal
+Alternative Compute Framework: Metal 0.0.1
 ================
 Nicholas Cooley
-2026-02-25
+2026-02-26
 
 - [Introduction](#introduction)
   - [Brief Metal API introduction](#brief-metal-api-introduction)

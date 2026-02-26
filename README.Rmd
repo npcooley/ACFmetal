@@ -1,6 +1,5 @@
 ---
-title: "ACFmetal"
-subtitle: "Alternative Compute Framework: Metal `r packageVersion('ACFmetal')`"
+title: "Alternative Compute Framework: Metal `r packageVersion('ACFmetal')`"
 author: "Nicholas Cooley"
 date: "`r Sys.Date()`"
 output: 
