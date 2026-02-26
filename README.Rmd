@@ -230,9 +230,9 @@ example_fun_02 <- function(metal_ctx,
 
 </details>
 
-## GPU performance
+## Using `microbenchmark` to get some performance benchmarks
 
-Use `microbenchmark` to get some performance benchmarks.
+The example used here is a bit of a conceptual inflection point. Operations that are simpler than this will require larger (in some cases *much* larger) inputs/outputs for a Metal device to provide a speedup vs bog standard CPU compute. In the case of very simple operations, or operations that are highly optimized on the CPU, speedups may not really be available until input/output sizes expand past sizes that are not reasonably managed in R, particularly on consumer grade hardware. However, almost any operation more complex than naive matrix multiplication will (likely) see performance improvements greater than those shown here.
 
 ```{r, wrapper performance}
 set.seed(1986)
@@ -252,7 +252,7 @@ for (a1 in seq_along(dim_set)) {
                  ncol = dim_size)
   
   # suppress the nanosecond timings warning...
-  timing_res <- suppressMessages(microbenchmark("internal" = var1 %*% var2,
+  timing_res <- suppressWarnings(microbenchmark("internal" = var1 %*% var2,
                                                 "fun01" = example_fun_01(metal_ctx = metal_ctx,
                                                                          metal_fun = fun_ptr[[1]],
                                                                          input1 = var1,
@@ -305,5 +305,46 @@ legend("topleft",
        cex = 1.5)
 ```
 
+As should be expected (because compute is taking place with different precisions), values returned by compute on a Metal devices are not going to be exactly the same as those generated on the baked in CPU, but typically deviations here are within generally accepted tolerances. Checking them for personal preferences is rarely a poor choice though. Unique implementations of the same operations *should* return matching values however.
 
+```{r, truthiness checks, fig.width=7, fig.height=3.5}
+dim_size <- 100
+var1 <- matrix(data = runif(dim_size^2),
+               nrow = dim_size,
+               ncol = dim_size)
+var2 <- matrix(data = runif(dim_size^2),
+               nrow = dim_size,
+               ncol = dim_size)
 
+res01 <- var1 %*% var2
+res02 <- example_fun_01(metal_ctx = metal_ctx,
+                        metal_fun = fun_ptr[[1]],
+                        input1 = var1,
+                        input2 = var2)
+res03 <- example_fun_02(metal_ctx = metal_ctx,
+                        metal_fun = fun_ptr[[1]],
+                        input1 = var1,
+                        input2 = var2)
+layout(mat = matrix(data = 1:2,
+                    nrow = 1))
+plot(as.vector(res01) - as.vector(res02),
+     pch = 46,
+     xlab = "index",
+     ylab = "delta from CPU value",
+     main = "CPU vs Metal device")
+plot(as.vector(res02) - as.vector(res03),
+     pch = 46,
+     xlab = "index",
+     ylab = "delta between implementations",
+     main = "implementation 1 vs 2")
+```
+
+As with most things in compute, hardware and environment matter. This README was knit on an Apple M4, with reasonably up-to-date versions of R, and macOS.
+
+```{r, sessioninfo}
+Sys.time()
+system2(command = "sysctl",
+        args = " -n machdep.cpu.brand_string",
+        stdout = TRUE)
+sessionInfo()
+```

@@ -1,4 +1,4 @@
-Alternative Compute Framework: Metal 0.0.1
+Alternative Compute Framework: Metal 0.1.0
 ================
 Nicholas Cooley
 2026-02-26
@@ -12,7 +12,8 @@ Nicholas Cooley
   - [Library, kernel function, and context
     management](#library-kernel-function-and-context-management)
   - [Function execution](#function-execution)
-  - [GPU performance](#gpu-performance)
+  - [Using `microbenchmark` to get some performance
+    benchmarks](#using-microbenchmark-to-get-some-performance-benchmarks)
 
 **Infrastructure for calling Apple’s Metal framework from R**
 
@@ -81,7 +82,7 @@ if (Sys.info()["sysname"] == "Darwin") {
 } else {
   print("wrong OS")
 }
-# ACFmetal 0.0.1 - Metal GPU acceleration is available
+# ACFmetal 0.1.0 - Metal GPU acceleration is available
 ```
 
 ## Device discovery
@@ -273,9 +274,18 @@ example_fun_02 <- function(metal_ctx,
 
 </details>
 
-## GPU performance
+## Using `microbenchmark` to get some performance benchmarks
 
-Use `microbenchmark` to get some performance benchmarks.
+The example used here is a bit of a conceptual inflection point.
+Operations that are simpler than this will require larger (in some cases
+*much* larger) inputs/outputs for a Metal device to provide a speedup vs
+bog standard CPU compute. In the case of very simple operations, or
+operations that are highly optimized on the CPU, speedups may not really
+be available until input/output sizes expand past sizes that are not
+reasonably managed in R, particularly on consumer grade hardware.
+However, almost any operation more complex than naive matrix
+multiplication will (likely) see performance improvements greater than
+those shown here.
 
 ``` r
 set.seed(1986)
@@ -295,7 +305,7 @@ for (a1 in seq_along(dim_set)) {
                  ncol = dim_size)
   
   # suppress the nanosecond timings warning...
-  timing_res <- suppressMessages(microbenchmark("internal" = var1 %*% var2,
+  timing_res <- suppressWarnings(microbenchmark("internal" = var1 %*% var2,
                                                 "fun01" = example_fun_01(metal_ctx = metal_ctx,
                                                                          metal_fun = fun_ptr[[1]],
                                                                          input1 = var1,
@@ -314,9 +324,6 @@ for (a1 in seq_along(dim_set)) {
                            FUN.VALUE = vector(mode = "numeric",
                                               length = 1))
 }
-# Warning in microbenchmark(internal = var1 %*% var2, fun01 =
-# example_fun_01(metal_ctx = metal_ctx, : less accurate nanosecond times to avoid
-# potential integer overflows
 res_vals <- do.call(rbind,
                     res_vals)
 colset <- c("black",
@@ -352,3 +359,83 @@ legend("topleft",
 ```
 
 ![](README_files/figure-gfm/wrapper%20performance-1.png)<!-- -->
+
+As should be expected (because compute is taking place with different
+precisions), values returned by compute on a Metal devices are not going
+to be exactly the same as those generated on the baked in CPU, but
+typically deviations here are within generally accepted tolerances.
+Checking them for personal preferences is rarely a poor choice though.
+Unique implementations of the same operations *should* return matching
+values however.
+
+``` r
+dim_size <- 100
+var1 <- matrix(data = runif(dim_size^2),
+               nrow = dim_size,
+               ncol = dim_size)
+var2 <- matrix(data = runif(dim_size^2),
+               nrow = dim_size,
+               ncol = dim_size)
+
+res01 <- var1 %*% var2
+res02 <- example_fun_01(metal_ctx = metal_ctx,
+                        metal_fun = fun_ptr[[1]],
+                        input1 = var1,
+                        input2 = var2)
+res03 <- example_fun_02(metal_ctx = metal_ctx,
+                        metal_fun = fun_ptr[[1]],
+                        input1 = var1,
+                        input2 = var2)
+layout(mat = matrix(data = 1:2,
+                    nrow = 1))
+plot(as.vector(res01) - as.vector(res02),
+     pch = 46,
+     xlab = "index",
+     ylab = "delta from CPU value",
+     main = "CPU vs Metal device")
+plot(as.vector(res02) - as.vector(res03),
+     pch = 46,
+     xlab = "index",
+     ylab = "delta between implementations",
+     main = "implementation 1 vs 2")
+```
+
+![](README_files/figure-gfm/truthiness%20checks-1.png)<!-- -->
+
+As with most things in compute, hardware and environment matter. This
+README was knit on an Apple M4, with reasonably up-to-date versions of
+R, and macOS.
+
+``` r
+Sys.time()
+# [1] "2026-02-26 14:22:55 GMT"
+system2(command = "sysctl",
+        args = " -n machdep.cpu.brand_string",
+        stdout = TRUE)
+# [1] "Apple M4"
+sessionInfo()
+# R version 4.5.1 (2025-06-13)
+# Platform: aarch64-apple-darwin20
+# Running under: macOS Sequoia 15.7.4
+# 
+# Matrix products: default
+# BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
+# LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+# 
+# locale:
+# [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+# 
+# time zone: Europe/Dublin
+# tzcode source: internal
+# 
+# attached base packages:
+# [1] stats     graphics  grDevices utils     datasets  methods   base     
+# 
+# other attached packages:
+# [1] ACFmetal_0.1.0       microbenchmark_1.5.0
+# 
+# loaded via a namespace (and not attached):
+#  [1] compiler_4.5.1  fastmap_1.2.0   cli_3.6.5       tools_4.5.1    
+#  [5] htmltools_0.5.9 yaml_2.3.11     rmarkdown_2.30  knitr_1.50     
+#  [9] xfun_0.56       digest_0.6.39   rlang_1.1.6     evaluate_1.0.5
+```

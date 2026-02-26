@@ -18,7 +18,8 @@
 # so we're all going to live with my sins ¯\_(ツ)_/¯
 # 
 # in trying to make this make a bit more sense than it does in the BiocMetal
-# implementation
+# implementation, the arg type checking and compiler directive mess have been
+# dropped, it doesn't exactly feel entirely streamlined, but it's better...
 
 # Resource binding attributes (what slot a parameter maps to):
 # 
