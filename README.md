@@ -1,7 +1,7 @@
-Alternative Compute Framework: Metal 0.1.0
+Alternative Compute Framework: Metal 0.1.1
 ================
 Nicholas Cooley
-2026-02-26
+2026-08-15
 
 - [Introduction](#introduction)
   - [Brief Metal API introduction](#brief-metal-api-introduction)
@@ -82,7 +82,7 @@ if (Sys.info()["sysname"] == "Darwin") {
 } else {
   print("wrong OS")
 }
-# ACFmetal 0.1.0 - Metal GPU acceleration is available
+# ACFmetal 0.1.1 - Metal GPU acceleration is available
 ```
 
 ## Device discovery
@@ -189,22 +189,24 @@ example_fun_01 <- function(metal_ctx,
                 "uint", # buffer(2): K (scalar)
                 "uint", # buffer(3): N (scalar)
                 "float", # buffer(4): A
-                "float", # buffer(5): B
-                "WORKDIMS")
+                "float") # buffer(5): B
+  arg_list <- list(output_template,
+                   dim1,
+                   dim2,
+                   dim4,
+                   input1,
+                   input2)
   
   # 2D grid: one thread per output cell
-  res <- .External("metal_simple_runner",
-                   metal_ctx,
-                   metal_fun,
-                   arg_types,
-                   output_template,
-                   dim1, # input 1 unique dim
-                   dim2, # shared inner dimension, could also be dim3
-                   dim4, # input 2 unique dim
-                   as.vector(input1),
-                   as.vector(input2),
-                   as.integer(c(dim1, dim4, 1L)),
-                   PACKAGE = "ACFmetal")
+  res <- .Call("metal_simple_runner",
+               metal_ctx,
+               metal_fun,
+               arg_types,
+               arg_list,
+               as.integer(c(dim1, dim4, 1L)),
+               NULL, # the R wrapper supplies this, but we need to explicitly add here
+               256, # the R wrapper supplies this, but we need to explicitly add here
+               PACKAGE = "ACFmetal")
   
   res <- matrix(data = res,
                 nrow = dim1,
@@ -254,15 +256,14 @@ example_fun_02 <- function(metal_ctx,
                                             "uint", # buffer(2): K (scalar)
                                             "uint", # buffer(3): N (scalar)
                                             "float", # buffer(4): A
-                                            "float", # buffer(5): B
-                                            "WORKDIMS"),
-                              output_template,
-                              dim1, # input 1 unique dim
-                              dim2, # shared inner dimension, could also be dim3
-                              dim4, # input 2 unique dim
-                              as.vector(input1),
-                              as.vector(input2),
-                              as.integer(c(dim1, dim4, 1L)))
+                                            "float"), # buffer(5): B
+                              arg_list = list(output_template,
+                                              dim1,
+                                              dim2,
+                                              dim4,
+                                              as.vector(input1),
+                                              as.vector(input2)),
+                              work_dims = as.integer(c(dim1, dim4, 1L)))
   
   res <- matrix(data = res,
                 nrow = dim1,
@@ -408,7 +409,7 @@ R, and macOS.
 
 ``` r
 Sys.time()
-# [1] "2026-02-26 14:22:55 GMT"
+# [1] "2026-08-15 10:06:24 PDT"
 system2(command = "sysctl",
         args = " -n machdep.cpu.brand_string",
         stdout = TRUE)
@@ -425,17 +426,18 @@ sessionInfo()
 # locale:
 # [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 # 
-# time zone: Europe/Dublin
+# time zone: America/Los_Angeles
 # tzcode source: internal
 # 
 # attached base packages:
 # [1] stats     graphics  grDevices utils     datasets  methods   base     
 # 
 # other attached packages:
-# [1] ACFmetal_0.1.0       microbenchmark_1.5.0
+# [1] ACFmetal_0.1.1       microbenchmark_1.5.0
 # 
 # loaded via a namespace (and not attached):
-#  [1] compiler_4.5.1  fastmap_1.2.0   cli_3.6.5       tools_4.5.1    
-#  [5] htmltools_0.5.9 yaml_2.3.11     rmarkdown_2.30  knitr_1.50     
-#  [9] xfun_0.56       digest_0.6.39   rlang_1.1.6     evaluate_1.0.5
+#  [1] compiler_4.5.1    fastmap_1.2.0     cli_3.6.6         tools_4.5.1      
+#  [5] htmltools_0.5.9   rstudioapi_0.18.0 yaml_2.3.11       rmarkdown_2.30   
+#  [9] knitr_1.50        xfun_0.56         digest_0.6.39     rlang_1.2.0      
+# [13] evaluate_1.0.5
 ```

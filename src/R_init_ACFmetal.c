@@ -46,6 +46,7 @@ static const R_CallMethodDef callMethods[] = {
   CALL_DEF(c_metal_make_context, 1),
   CALL_DEF(metal_get_library_pointer, 2),
   CALL_DEF(metal_get_function_pointers, 2),
+  CALL_DEF(metal_simple_runner, 7),
   {NULL, NULL, 0}
 };
 
@@ -54,7 +55,7 @@ static const R_CallMethodDef callMethods[] = {
  * ========================================================================= */
 
 static const R_ExternalMethodDef externalMethods[] = {
-  EXTERNAL_DEF(metal_simple_runner, -1),
+  EXTERNAL_DEF(old_metal_simple_runner, -1),
   {NULL, NULL, 0}
 };
 

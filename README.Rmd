@@ -150,22 +150,24 @@ example_fun_01 <- function(metal_ctx,
                 "uint", # buffer(2): K (scalar)
                 "uint", # buffer(3): N (scalar)
                 "float", # buffer(4): A
-                "float", # buffer(5): B
-                "WORKDIMS")
+                "float") # buffer(5): B
+  arg_list <- list(output_template,
+                   dim1,
+                   dim2,
+                   dim4,
+                   input1,
+                   input2)
   
   # 2D grid: one thread per output cell
-  res <- .External("metal_simple_runner",
-                   metal_ctx,
-                   metal_fun,
-                   arg_types,
-                   output_template,
-                   dim1, # input 1 unique dim
-                   dim2, # shared inner dimension, could also be dim3
-                   dim4, # input 2 unique dim
-                   as.vector(input1),
-                   as.vector(input2),
-                   as.integer(c(dim1, dim4, 1L)),
-                   PACKAGE = "ACFmetal")
+  res <- .Call("metal_simple_runner",
+               metal_ctx,
+               metal_fun,
+               arg_types,
+               arg_list,
+               as.integer(c(dim1, dim4, 1L)),
+               NULL, # the R wrapper supplies this, but we need to explicitly add here
+               256, # the R wrapper supplies this, but we need to explicitly add here
+               PACKAGE = "ACFmetal")
   
   res <- matrix(data = res,
                 nrow = dim1,
@@ -210,15 +212,14 @@ example_fun_02 <- function(metal_ctx,
                                             "uint", # buffer(2): K (scalar)
                                             "uint", # buffer(3): N (scalar)
                                             "float", # buffer(4): A
-                                            "float", # buffer(5): B
-                                            "WORKDIMS"),
-                              output_template,
-                              dim1, # input 1 unique dim
-                              dim2, # shared inner dimension, could also be dim3
-                              dim4, # input 2 unique dim
-                              as.vector(input1),
-                              as.vector(input2),
-                              as.integer(c(dim1, dim4, 1L)))
+                                            "float"), # buffer(5): B
+                              arg_list = list(output_template,
+                                              dim1,
+                                              dim2,
+                                              dim4,
+                                              as.vector(input1),
+                                              as.vector(input2)),
+                              work_dims = as.integer(c(dim1, dim4, 1L)))
   
   res <- matrix(data = res,
                 nrow = dim1,

@@ -208,12 +208,20 @@ void* metal_get_function_from_library(void* library,
 void* metal_create_compute_pipeline(void* device,
                                     void* function,
                                     char** error_msg);
+size_t metal_max_threads_per_threadgroup(void* pipeline);
 
 /* ============================================================================
  * runners.c
  * ========================================================================= */
 
-attribute_visible SEXP metal_simple_runner(SEXP args);
+attribute_visible SEXP old_metal_simple_runner(SEXP args);
+attribute_visible SEXP metal_simple_runner(SEXP context_ptr,
+                                           SEXP fun_ptr,
+                                           SEXP arg_types,
+                                           SEXP arg_list,
+                                           SEXP work_dims,
+                                           SEXP threadgroup_dims,
+                                           SEXP threads_per_threadgroup);
 
 /* ============================================================================
  * utils.c

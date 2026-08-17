@@ -8,7 +8,10 @@
   simple_metal_wrapper(metal_context,
                        fun_ptr,
                        arg_types,
-                       ...)
+                       arg_list,
+                       work_dims = NULL,
+                       threadgroup_dims = NULL,
+                       threads_per_threadgroup = 256L)
 }
 \arguments{
   \item{metal_context}{
@@ -20,8 +23,17 @@
   \item{arg_types}{
     A character vector serving as a key for the Metal types each argument passed to the ellipses must be converted to.
   }
-  \item{...}{
-    Vectors matching the arguments required by the kernel function declaration.
+  \item{arg_list}{
+    A list of vectors with the dummy input vector in the first position.
+  }
+  \item{work_dims}{
+    placeholder.
+  }
+  \item{threadgroup_dims}{
+    placeholder.
+  }
+  \item{threads_per_threadgroup}{
+    placeholder.
   }
 }
 \value{
@@ -30,7 +42,15 @@
 \details{
   An example execution function, thematically similar to oclRun in the OpenCL package. This R function serves as a wrapper for the C function \code{metal_simple_runner}, which itself is a wrapper for an Objective C function \code{create_and_commit_commandbuffer}.
   
-  The arguments passed to the \code{ellipses} need to match the order that they're declared in the kernel function.}
+  The arguments passed to the \code{ellipses} need to match the order that they're declared in the kernel function.
+}
+\seealso{
+  \itemize{
+    \item \code{\link{metal_functions_from_library}}
+    \item \code{\link{metal_make_context}}
+    \item \code{\link{metal_devices_default}}
+  }
+}
 \examples{
 tmp01 <- tempfile(fileext = ".metal")
 y <- "
@@ -79,15 +99,8 @@ res <- simple_metal_wrapper(metal_context = tmp06,
                                           "uint",
                                           "float",
                                           "float"),
-                            val01,
-                            n,
-                            val02,
-                            val03)
-}
-\seealso{
-  \itemize{
-    \item \code{\link{metal_functions_from_library}}
-    \item \code{\link{metal_make_context}}
-    \item \code{\link{metal_devices_default}}
-  }
+                            arg_list = list(val01,
+                                            n,
+                                            val02,
+                                            val03))
 }

@@ -133,3 +133,13 @@ void* metal_create_compute_pipeline(void* device,
 
   return (__bridge_retained void*)pipeline;
 }
+
+// query the true maximum threadgroup size for a compiled pipeline --
+// this is hardware- and pipeline-dependent, unlike CUDA's ~universal 1024
+size_t metal_max_threads_per_threadgroup(void* pipeline) {
+  if (!pipeline) {
+    return 0;
+  }
+  id<MTLComputePipelineState> mtl_pipeline = (__bridge id<MTLComputePipelineState>)pipeline;
+  return (size_t)[mtl_pipeline maxTotalThreadsPerThreadgroup];
+}

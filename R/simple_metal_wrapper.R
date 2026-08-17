@@ -21,20 +21,8 @@
 # implementation, the arg type checking and compiler directive mess have been
 # dropped, it doesn't exactly feel entirely streamlined, but it's better...
 
-# Resource binding attributes (what slot a parameter maps to):
-# 
-# [[buffer(n)]] — binds to a buffer at index n
-# [[texture(n)]] — binds to a texture at index n
-# [[sampler(n)]] — binds to a sampler at index n
-
-# Thread position / identity attributes (built-in values the GPU provides automatically):
-# 
-# [[thread_position_in_grid]] — the global thread ID across the entire dispatch
-# [[thread_position_in_threadgroup]] — local ID within the threadgroup
-# [[threadgroup_position_in_grid]] — which threadgroup this thread belongs to
-# [[threads_per_threadgroup]] — size of the threadgroup
-# [[threads_per_grid]] — total number of threads dispatched
-# [[thread_index_in_threadgroup]] — flattened 1D index within the threadgroup
+# this is a large rewrite of the underlying runner going from inferring things
+# to ingesting a specific set of args
 
 
 ###### -- FUNCTION ------------------------------------------------------------
@@ -42,13 +30,22 @@
 simple_metal_wrapper <- function(metal_context,
                                  fun_ptr,
                                  arg_types,
-                                 ...) {
-  # containerize the buffer vectors
-  vals <- list(...)
+                                 arg_list,
+                                 work_dims = NULL,
+                                 threadgroup_dims = NULL,
+                                 threads_per_threadgroup = 256L) {
+  
   # hard coded types because it's cheaper than pulling the data object
-  type_mode <- c('float', 'double', 'char', 'short',
-                 'int', 'long', 'uchar', 'ushort',
-                 'uint', 'ulong', 'WORKDIMS', 'THREADGROUPS')
+  type_mode <- c('float',
+                 'double',
+                 'char',
+                 'short',
+                 'int',
+                 'long',
+                 'uchar',
+                 'ushort',
+                 'uint',
+                 'ulong')
   
   if (!is(object = fun_ptr,
           class2 = "externalptr")) {
@@ -61,17 +58,31 @@ simple_metal_wrapper <- function(metal_context,
           class2 = "character")) {
     stop ("vector types must be assigned with a character vectors")
   }
-  if (length(arg_types) != length(vals)) {
-    stop ("all supplied vectors require an explicit type")
+  if (length(arg_types) != length(arg_list)) {
+    stop("length of 'arg_types' must equal the number of elements in 'arg_list'")
   }
   if (any(!(arg_types %in% type_mode))) {
-    stop("unrecognized type; only",
-         paste0("'",
-                type_mode,
-                "'",
-                collapse = ", "),
-         "are currently accepted")
+    bad_types <- arg_types[!(arg_types %in% type_mode)]
+    stop("unrecognized type(s): ",
+         paste0("'", bad_types, "'", collapse = ", "),
+         "; accepted types are: ",
+         paste0("'", type_mode, "'", collapse = ", "))
   }
+  
+  # pause these guardrails for a second,
+  # if ((is.null(work_dims) & !is.null(threadgroup_dims)) |
+  #     (!is.null(work_dims) & is.null(threadgroup_dims))) {
+  #   stop("if one of 'work_dims' or 'threadgroup_dims' is specified, so must the other")
+  # }
+  # if (!is.null(work_dims)) {
+  #   if (length(work_dims) != 3 |
+  #       length(threadgroup_dims) != 3 |
+  #       !is.integer(work_dims) |
+  #       !is.integer(threadgroup_dims)) {
+  #     stop("'work_dims' and 'threadgroup_dims' must both be integers of length three if either is supplied")
+  #   }
+  # }
+  
   # the simple runner makes A LOT of assumptions to remain 'simple'
   # chief among them are:
   # the first buffer argument is the output buffer,
@@ -79,12 +90,15 @@ simple_metal_wrapper <- function(metal_context,
   # order in the metal kernel function
   # [[identity attributes]] mixed in with [[binding attributes]] will likely
   # cause a problem ?
-  res <- .External("metal_simple_runner",
-                   metal_context,
-                   fun_ptr,
-                   arg_types,
-                   ...,
-                   PACKAGE = "ACFmetal")
+  res <- .Call("metal_simple_runner",
+               metal_context,
+               fun_ptr,
+               arg_types,
+               arg_list,
+               work_dims,
+               threadgroup_dims,
+               threads_per_threadgroup,
+               PACKAGE = "ACFmetal")
   
 }
 
