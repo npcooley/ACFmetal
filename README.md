@@ -1,7 +1,7 @@
 Alternative Compute Framework: Metal 0.1.1
 ================
 Nicholas Cooley
-2026-08-15
+2026-09-18
 
 - [Introduction](#introduction)
   - [Brief Metal API introduction](#brief-metal-api-introduction)
@@ -17,7 +17,18 @@ Nicholas Cooley
 
 **Infrastructure for calling Apple’s Metal framework from R**
 
+<!-- badges: start -->
+
+[![Lifecycle:
+deprecated](https://img.shields.io/badge/lifecycle-deprecated-red.svg)](https://lifecycle.r-lib.org/articles/stages.html)
+<!-- badges: end -->
+
 # Introduction
+
+**This package is no longer under development.** The capabilities
+presented here are now supported in
+[ardea](https://github.com/npcooley/ardea), which has recently been
+submitted to CRAN.
 
 Metal is [Apple’s builtin framework for GPU
 compute](https://developer.apple.com/documentation/metal?language=objc),
@@ -409,7 +420,7 @@ R, and macOS.
 
 ``` r
 Sys.time()
-# [1] "2026-08-15 10:06:24 PDT"
+# [1] "2026-09-18 18:47:08 EDT"
 system2(command = "sysctl",
         args = " -n machdep.cpu.brand_string",
         stdout = TRUE)
@@ -417,7 +428,7 @@ system2(command = "sysctl",
 sessionInfo()
 # R version 4.5.1 (2025-06-13)
 # Platform: aarch64-apple-darwin20
-# Running under: macOS Sequoia 15.7.4
+# Running under: macOS Sequoia 15.7.9
 # 
 # Matrix products: default
 # BLAS:   /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRblas.0.dylib 
@@ -426,7 +437,7 @@ sessionInfo()
 # locale:
 # [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 # 
-# time zone: America/Los_Angeles
+# time zone: America/New_York
 # tzcode source: internal
 # 
 # attached base packages:

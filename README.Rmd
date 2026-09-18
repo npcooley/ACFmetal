@@ -23,7 +23,14 @@ knitr::opts_chunk$set(comment = "#", # mimic canonical R comments
                       prompt = FALSE) # probably better for folks who want to copy and paste from the vignette
 ```
 
+<!-- badges: start -->
+[![Lifecycle: deprecated](https://img.shields.io/badge/lifecycle-deprecated-red.svg)](https://lifecycle.r-lib.org/articles/stages.html)
+<!-- badges: end -->
+
 # Introduction
+
+**This package is no longer under development.**
+ The capabilities presented here are now supported in [ardea](https://github.com/npcooley/ardea), which has recently been submitted to CRAN.
 
 Metal is [Apple's builtin framework for GPU compute](https://developer.apple.com/documentation/metal?language=objc), similar to CUDA (NVIDIA), or OpenCL (cross-platform). It can give us access to the GPU side of Apple Silicon processors, and the discrete GPUs present on some older Macs. The Metal API is accessible through ObjC, meaning that access through R will require a mix of C and ObjC. This package is currently still under construction.
 
